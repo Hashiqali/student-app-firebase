@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "840014197662",
+    "project_id": "student-app-397ae",
+    "storage_bucket": "student-app-397ae.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:840014197662:android:0f31acb34bc304e4889c8f",
+        "android_client_info": {
+          "package_name": "com.example.sqflite_student"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2Dy6MzLkMHV5F_--YEg4rf84-a1J-xQc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:840014197662:android:d6a17877b69f120e889c8f",
+        "android_client_info": {
+          "package_name": "com.example.student_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2Dy6MzLkMHV5F_--YEg4rf84-a1J-xQc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
