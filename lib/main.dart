@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:student_app/db/function/db_function.dart';
 import 'package:student_app/screens/homescreen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -12,7 +10,7 @@ void main() async {
           appId: '1:840014197662:android:0f31acb34bc304e4889c8f',
           messagingSenderId: '840014197662',
           projectId: 'student-app-397ae'));
-  await initializingdatabase();
+
   runApp(const MyApp());
 }
 

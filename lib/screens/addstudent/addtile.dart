@@ -1,10 +1,13 @@
 import 'dart:io';
 
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:student_app/screens/addstudent/add_student.dart';
 import 'package:student_app/screens/functions.dart';
+
+String? imageUrl;
 
 class Addtile extends StatefulWidget {
   const Addtile({super.key});
@@ -21,10 +24,6 @@ class _AddtileState extends State<Addtile> {
     });
     super.initState();
   }
-  // void dispose() {
-
-  //   super.dispose();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -252,8 +251,19 @@ class _AddtileState extends State<Addtile> {
         image = image1!.path;
       });
     }
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).pop();
+
+    try {
+      String fileName = DateTime.now().microsecondsSinceEpoch.toString();
+      Reference referenceRoot = FirebaseStorage.instance.ref();
+      Reference referenceDireImage = referenceRoot.child('images');
+      Reference referenceImageToUpload = referenceDireImage.child(fileName);
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+      await referenceImageToUpload.putFile(File(img1!.path));
+      imageUrl = await referenceImageToUpload.getDownloadURL();
+    } catch (e) {
+      print(e);
+    } finally {}
   }
 
   Future<void> fromcamera() async {
@@ -265,7 +275,17 @@ class _AddtileState extends State<Addtile> {
         image = image1!.path;
       });
     }
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).pop();
+    try {
+      String fileName = DateTime.now().microsecondsSinceEpoch.toString();
+      Reference referenceRoot = FirebaseStorage.instance.ref();
+      Reference referenceDireImage = referenceRoot.child('images');
+      Reference referenceImageToUpload = referenceDireImage.child(fileName);
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+      await referenceImageToUpload.putFile(File(img1!.path));
+      imageUrl = await referenceImageToUpload.getDownloadURL();
+    } catch (e) {
+      print(e);
+    } finally {}
   }
 }

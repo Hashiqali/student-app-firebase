@@ -1,8 +1,7 @@
-import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:student_app/db/function/db_function.dart';
-import 'package:student_app/db/model/db_model.dart';
+import 'package:student_app/screens/liststudent/list_student.dart';
 import 'package:student_app/screens/search_details.dart';
 
 class Search extends SearchDelegate {
@@ -47,15 +46,15 @@ class Search extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return ValueListenableBuilder(
-        valueListenable: studentlistNotifier,
-        builder: (BuildContext context, List<Studentmodel> studentlist,
-            Widget? child) {
-          final songbox = studentlist.toList();
-          final filtered = songbox
+    return StreamBuilder(
+        stream: firedata.snapshots(),
+        builder: (ctx, AsyncSnapshot snapshot) {
+          List filtered1 = snapshot.data?.docs?.toList() ?? [];
+          final filtered = filtered1
               .where((element) =>
-                  element.name.toLowerCase().contains(query.toLowerCase()))
+                  element['Name'].toLowerCase().contains(query.toLowerCase()))
               .toList();
+
           if (query.isEmpty) {
             return Center(
                 child: Lottie.asset(
@@ -68,74 +67,242 @@ class Search extends SearchDelegate {
                   'assets/animation/no searched song animation.json'),
             );
           }
-          return ListView.builder(
-            itemBuilder: (ctx, index) {
-              final data = filtered[index];
-              String nameval = data.name.toLowerCase();
 
-              if ((nameval).contains(query.toLowerCase().trim())) {
-                return ListTile(
-                  onTap: () {
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: (context) {
-                      return Details(
-                        studentdetails: data,
+          if (snapshot.hasData) {
+            return SafeArea(
+              child: ListView.separated(
+                  itemBuilder: (ctx, index) {
+                    final data = filtered[index];
+                    String nameval = data['Name'].toLowerCase();
+                    if ((nameval).contains(query.toLowerCase().trim())) {
+                      return Card(
+                        color: const Color.fromARGB(255, 240, 187, 30),
+                        elevation: 10,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading: data['Image'] != null
+                                  ? CircleAvatar(
+                                      radius: 34,
+                                      child: ClipOval(
+                                        child: CachedNetworkImage(
+                                          imageUrl: data['Image'],
+                                          width: 56,
+                                          height: 56,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              const Padding(
+                                            padding: EdgeInsets.all(5),
+                                            child: CircularProgressIndicator(
+                                                color: Color.fromARGB(
+                                                    255, 240, 187, 30),
+                                                backgroundColor:
+                                                    Colors.transparent),
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              const Icon(
+                                            Icons.error,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : const CircleAvatar(
+                                      radius: 32,
+                                      backgroundColor: Colors.black,
+                                    ),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Name : ${data['Name']}',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Age : ${data['Age']}',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Phone : ${data['Phone Number']}',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Place : ${data['Place']}',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                Navigator.of(context)
+                                    .push(MaterialPageRoute(builder: (context) {
+                                  return Details(
+                                    studentdetails: data,
+                                  );
+                                }));
+                              },
+                            ),
+                          ],
+                        ),
                       );
-                    }));
+                    }
+                    return null;
                   },
-                  title: Text(
-                    data.name,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  leading: CircleAvatar(
-                    backgroundImage: FileImage(File(data.image)),
-                  ),
-                );
-              }
-              return null;
-            },
-            itemCount: studentlist.length,
-          );
+                  separatorBuilder: (ctx, index) {
+                    return const SizedBox(
+                      height: 1,
+                    );
+                  },
+                  itemCount: filtered.length),
+            );
+          } else {
+            return const Center(
+              child: Text(
+                'No data',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+          }
         });
   }
 
   @override
   Widget buildResults(BuildContext context) {
-    return ValueListenableBuilder(
-        valueListenable: studentlistNotifier,
-        builder: (BuildContext context, List<Studentmodel> studentlist,
-            Widget? child) {
-          final songbox = studentlist.toList();
-          final filtered = songbox
+    return StreamBuilder(
+        stream: firedata.snapshots(),
+        builder: (ctx, AsyncSnapshot snapshot) {
+          List filtered1 = snapshot.data?.docs?.toList() ?? [];
+          final filtered = filtered1
               .where((element) =>
-                  element.name.toLowerCase().contains(query.toLowerCase()))
+                  element['Name'].toLowerCase().contains(query.toLowerCase()))
               .toList();
-          return ListView.builder(
-            itemBuilder: (ctx, index) {
-              final data = filtered[index];
-              String nameval = data.name.toLowerCase();
-              if ((nameval).contains((query.toLowerCase().trim()))) {
-                return ListTile(
-                  onTap: () {
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: (context) {
-                      return Details(
-                        studentdetails: data,
-                      );
-                    }));
-                  },
-                  title: Text(data.name,
-                      style: const TextStyle(color: Colors.white)),
-                  leading: CircleAvatar(
-                    backgroundImage: FileImage(File(data.image)),
-                  ),
-                );
-              }
 
-              return null;
-            },
-            itemCount: studentlist.length,
-          );
+          if (query.isEmpty) {
+            return Center(
+                child: Lottie.asset(
+                    height: 120,
+                    'assets/animation/searching song animation.json'));
+          } else if (filtered.isEmpty) {
+            return Center(
+              child: Lottie.asset(
+                  height: 120,
+                  'assets/animation/no searched song animation.json'),
+            );
+          }
+          if (snapshot.hasData) {
+            return SafeArea(
+              child: ListView.separated(
+                  itemBuilder: (ctx, index) {
+                    final data = filtered[index];
+                    String nameval = data['Name'].toLowerCase();
+
+                    if ((nameval).contains((query.toLowerCase().trim()))) {
+                      return Card(
+                        color: const Color.fromARGB(255, 240, 187, 30),
+                        elevation: 10,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading: data['Image'] != null
+                                  ? CircleAvatar(
+                                      radius: 34,
+                                      child: ClipOval(
+                                        child: CachedNetworkImage(
+                                          imageUrl: data['Image'],
+                                          width: 56,
+                                          height: 56,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) =>
+                                              const Padding(
+                                            padding: EdgeInsets.all(5),
+                                            child: CircularProgressIndicator(
+                                                color: Color.fromARGB(
+                                                    255, 240, 187, 30),
+                                                backgroundColor:
+                                                    Colors.transparent),
+                                          ),
+                                          errorWidget: (context, url, error) =>
+                                              const Icon(
+                                            Icons.error,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : const CircleAvatar(
+                                      radius: 32,
+                                      backgroundColor: Colors.black,
+                                    ),
+                              title: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Name : ${data['Name']}',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Age : ${data['Age']}',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Phone : ${data['Phone Number']}',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Place : ${data['Place']}',
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                Navigator.of(context)
+                                    .push(MaterialPageRoute(builder: (context) {
+                                  return Details(
+                                    studentdetails: data,
+                                  );
+                                }));
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return null;
+                  },
+                  separatorBuilder: (ctx, index) {
+                    return const SizedBox(
+                      height: 1,
+                    );
+                  },
+                  itemCount: filtered.length),
+            );
+          } else {
+            return const Center(
+              child: Text(
+                'No data',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+          }
         });
   }
 }

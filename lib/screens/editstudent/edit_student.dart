@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:student_app/db/model/db_model.dart';
+import 'package:student_app/screens/addstudent/add_student.dart';
 import 'package:student_app/screens/editstudent/editTile.dart';
 
 final namecontrollers = TextEditingController();
@@ -10,9 +10,10 @@ final phonecontrollers = TextEditingController();
 
 final placecontrollers = TextEditingController();
 
+// ignore: must_be_immutable
 class Updatepage extends StatefulWidget {
-  const Updatepage({super.key, required this.studentdetails});
-  final Studentmodel studentdetails;
+  Updatepage({super.key, required this.studentdetails});
+  var studentdetails;
   @override
   State<Updatepage> createState() => _UpdatepageState();
 }
@@ -21,6 +22,14 @@ class _UpdatepageState extends State<Updatepage> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    setState(() {
+      image1 = null;
+    });
+    super.dispose();
   }
 
   @override

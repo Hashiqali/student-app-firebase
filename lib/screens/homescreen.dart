@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:student_app/db/function/db_function.dart';
 import 'package:student_app/screens/addstudent/add_student.dart';
 import 'package:student_app/screens/liststudent/list_student.dart';
 import 'package:student_app/screens/search_screen.dart';
@@ -16,7 +15,6 @@ class _HomescreenState extends State<Homescreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   @override
   Widget build(BuildContext context) {
-    getallstudent();
     return Scaffold(
         key: _scaffoldKey,
         drawer: const Drawer(

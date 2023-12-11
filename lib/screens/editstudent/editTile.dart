@@ -1,17 +1,18 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:student_app/db/function/db_function.dart';
-import 'package:student_app/db/model/db_model.dart';
 import 'package:student_app/screens/addstudent/add_student.dart';
+import 'package:student_app/screens/addstudent/addtile.dart';
 import 'package:student_app/screens/editstudent/edit_student.dart';
 import 'package:student_app/screens/functions.dart';
 import 'package:student_app/screens/homescreen.dart';
 
 class EditTile extends StatefulWidget {
   const EditTile({super.key, required this.studentdetails});
-  final Studentmodel studentdetails;
+  final studentdetails;
   @override
   State<EditTile> createState() => _EditTileState();
 }
@@ -20,10 +21,10 @@ class _EditTileState extends State<EditTile> {
   final GlobalKey<FormState> key2 = GlobalKey<FormState>();
   @override
   void initState() {
-    namecontrollers.text = widget.studentdetails.name;
-    agecontrollers.text = widget.studentdetails.age;
-    phonecontrollers.text = widget.studentdetails.phone;
-    placecontrollers.text = widget.studentdetails.place;
+    namecontrollers.text = widget.studentdetails['Name'];
+    agecontrollers.text = widget.studentdetails['Age'];
+    phonecontrollers.text = widget.studentdetails['Phone Number'];
+    placecontrollers.text = widget.studentdetails['Place'];
     super.initState();
   }
 
@@ -44,22 +45,45 @@ class _EditTileState extends State<EditTile> {
                 ),
                 Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 45,
-                      backgroundImage: image1 != null
-                          ? FileImage(image1!)
-                          : FileImage(File(widget.studentdetails.image)),
-                    ),
+                    image1 == null
+                        ? CircleAvatar(
+                            radius: 40,
+                            child: ClipOval(
+                              clipBehavior: Clip.antiAlias,
+                              child: CachedNetworkImage(
+                                imageUrl: widget.studentdetails['Image'],
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Padding(
+                                  padding: EdgeInsets.all(5),
+                                  child: CircularProgressIndicator(
+                                      color: Color.fromARGB(255, 240, 187, 30),
+                                      backgroundColor: Colors.transparent),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(
+                                  Icons.error,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ),
+                          )
+                        : CircleAvatar(
+                            radius: 40,
+                            backgroundImage: FileImage(image1!),
+                          ),
                     Positioned(
-                      bottom: -8,
-                      left: 40,
+                      bottom: -10,
+                      left: 42,
                       child: IconButton(
                           onPressed: () {
                             option();
                           },
                           icon: const Icon(
                             Icons.add_a_photo,
-                            color: Colors.black,
+                            color: Color.fromARGB(192, 231, 227, 227),
+                            size: 20,
                           )),
                     )
                   ],
@@ -198,8 +222,15 @@ class _EditTileState extends State<EditTile> {
                           width: 300,
                           child: ElevatedButton(
                               onPressed: () {
-                                update(context, widget.studentdetails.id,
-                                    context, widget.studentdetails.image);
+                                updatefirebase(
+                                    widget.studentdetails.id, context);
+                                setState(() {
+                                  image1 = null;
+                                });
+                                Navigator.of(context)
+                                    .push(MaterialPageRoute(builder: (context) {
+                                  return const Homescreen();
+                                }));
                               },
                               style: ElevatedButton.styleFrom(
                                   backgroundColor:
@@ -226,7 +257,7 @@ class _EditTileState extends State<EditTile> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.amber.shade500,
           content: const Text(
             'Photo options',
             style: TextStyle(color: Colors.black),
@@ -264,8 +295,18 @@ class _EditTileState extends State<EditTile> {
         image = image1!.path;
       });
     }
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).pop();
+    try {
+      String fileName = DateTime.now().microsecondsSinceEpoch.toString();
+      Reference referenceRoot = FirebaseStorage.instance.ref();
+      Reference referenceDireImage = referenceRoot.child('images');
+      Reference referenceImageToUpload = referenceDireImage.child(fileName);
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+      await referenceImageToUpload.putFile(File(img1!.path));
+      imageUrl = await referenceImageToUpload.getDownloadURL();
+    } catch (e) {
+      print(e);
+    } finally {}
   }
 
   Future<void> fromcamera() async {
@@ -277,31 +318,17 @@ class _EditTileState extends State<EditTile> {
         image = image1!.path;
       });
     }
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).pop();
-  }
-
-  Future<void> update(ctx, id, context, String images) async {
-    final name = namecontrollers.text.trim();
-    final age = agecontrollers.text.trim();
-    final phone = phonecontrollers.text.trim();
-    final place = placecontrollers.text.trim();
-
-    if (key2.currentState!.validate()) {
-      await updatestudent(
-        id,
-        name,
-        age,
-        phone,
-        place,
-        image != null ? image! : images,
-      );
-      clearcontroller();
-      Navigator.of(ctx).push(MaterialPageRoute(builder: (context) {
-        return const Homescreen();
-      }));
-
-      snackbar('Updated', context);
-    }
+    try {
+      String fileName = DateTime.now().microsecondsSinceEpoch.toString();
+      Reference referenceRoot = FirebaseStorage.instance.ref();
+      Reference referenceDireImage = referenceRoot.child('images');
+      Reference referenceImageToUpload = referenceDireImage.child(fileName);
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+      await referenceImageToUpload.putFile(File(img1!.path));
+      imageUrl = await referenceImageToUpload.getDownloadURL();
+    } catch (e) {
+      print(e);
+    } finally {}
   }
 }
