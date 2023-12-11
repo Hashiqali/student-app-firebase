@@ -8,7 +8,7 @@ import 'package:student_app/screens/addstudent/add_student.dart';
 import 'package:student_app/screens/addstudent/addtile.dart';
 import 'package:student_app/screens/editstudent/edit_student.dart';
 import 'package:student_app/screens/functions.dart';
-import 'package:student_app/screens/homescreen.dart';
+import 'package:student_app/screens/home_screen/homescreen.dart';
 
 class EditTile extends StatefulWidget {
   const EditTile({super.key, required this.studentdetails});

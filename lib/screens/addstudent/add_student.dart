@@ -1,7 +1,5 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:student_app/screens/addstudent/addtile.dart';
 
 File? image1;

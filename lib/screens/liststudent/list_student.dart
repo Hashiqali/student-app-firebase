@@ -19,11 +19,13 @@ class _ListstudentState extends State<Liststudent> {
     return StreamBuilder(
         stream: firedata.snapshots(),
         builder: (ctx, AsyncSnapshot snapshot) {
+          List value = snapshot.data?.docs?.toList() ?? [];
+          final allvalues = value.reversed.toList();
           if (snapshot.hasData) {
             return SafeArea(
               child: ListView.separated(
                   itemBuilder: (ctx, index) {
-                    DocumentSnapshot data = snapshot.data.docs[index];
+                    DocumentSnapshot data = allvalues[index];
 
                     return Listtile(
                       data: data,

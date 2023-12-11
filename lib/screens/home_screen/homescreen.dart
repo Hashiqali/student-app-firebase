@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:student_app/screens/addstudent/add_student.dart';
 import 'package:student_app/screens/liststudent/list_student.dart';
-import 'package:student_app/screens/search_screen.dart';
+import 'package:student_app/screens/search/search_screen.dart';
 import 'package:student_app/screens/settings/drawer.dart';
 
 class Homescreen extends StatefulWidget {
