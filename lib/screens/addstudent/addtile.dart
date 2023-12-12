@@ -1,12 +1,17 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:student_app/screens/addstudent/add_student.dart';
+import 'package:student_app/screens/editstudent/editTile.dart';
 import 'package:student_app/screens/functions.dart';
 
 String? imageUrl;
+Uint8List? imagebyte;
+bool uploading = false;
 
 class Addtile extends StatefulWidget {
   const Addtile({super.key});
@@ -19,7 +24,7 @@ class _AddtileState extends State<Addtile> {
   @override
   void initState() {
     setState(() {
-      image1 = null;
+      image = null;
     });
     super.initState();
   }
@@ -43,20 +48,31 @@ class _AddtileState extends State<Addtile> {
                     children: [
                       Stack(
                         children: [
-                          CircleAvatar(
-                            radius: 45,
-                            backgroundImage: image1 != null
-                                ? FileImage(image1!)
-                                : const AssetImage(
-                                        'assets/images/graduated.png')
-                                    as ImageProvider,
-                          ),
+                          image != null
+                              ? uploading
+                                  ? const CircleAvatar(
+                                      radius: 45,
+                                      backgroundColor: Colors.black,
+                                      child: CircularProgressIndicator(
+                                          color:
+                                              Color.fromARGB(255, 240, 187, 30),
+                                          backgroundColor: Colors.transparent),
+                                    )
+                                  : CircleAvatar(
+                                      radius: 45,
+                                      backgroundImage: MemoryImage(imagebyte!))
+                              : const CircleAvatar(
+                                  radius: 45,
+                                  backgroundImage:
+                                      AssetImage('assets/images/graduated.png')
+                                          as ImageProvider,
+                                ),
                           Positioned(
                             bottom: -10,
-                            right: -12,
+                            right: -8,
                             child: IconButton(
                                 onPressed: () {
-                                  option();
+                                  fromgallery();
                                 },
                                 icon: const Icon(
                                   Icons.add_a_photo,
@@ -242,27 +258,44 @@ class _AddtileState extends State<Addtile> {
   }
 
   Future<void> fromgallery() async {
-    final img1 = await ImagePicker().pickImage(source: ImageSource.gallery);
+    FilePickerResult? img1 = await FilePicker.platform.pickFiles();
 
     if (img1 != null) {
       setState(() {
-        image1 = File(img1.path);
-        image = image1!.path;
+        image = img1.files.first.name;
+        imagebyte = img1.files.first.bytes;
       });
     }
 
     try {
-      String fileName = DateTime.now().microsecondsSinceEpoch.toString();
-      Reference referenceRoot = FirebaseStorage.instance.ref();
-      Reference referenceDireImage = referenceRoot.child('images');
-      Reference referenceImageToUpload = referenceDireImage.child(fileName);
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
-      await referenceImageToUpload.putFile(File(img1!.path));
-      imageUrl = await referenceImageToUpload.getDownloadURL();
+      setState(() {
+        uploading = true;
+      });
+
+      firebase_storage.UploadTask uploadTask;
+      firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child('Product')
+          .child('/${image!}');
+      final metadata =
+          firebase_storage.SettableMetadata(contentType: 'image/jpeg');
+      uploadTask = ref.putData(imagebyte!, metadata);
+
+      await uploadTask.whenComplete(() => null);
+
+      imageUrl = await ref.getDownloadURL();
+      print(imageUrl);
+
+      setState(() {
+        uploading = false;
+      });
     } catch (e) {
       print(e);
-    } finally {}
+
+      setState(() {
+        uploading = false;
+      });
+    }
   }
 
   Future<void> fromcamera() async {

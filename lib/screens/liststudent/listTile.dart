@@ -8,8 +8,10 @@ import 'package:student_app/screens/functions.dart';
 class Listtile extends StatelessWidget {
   Listtile({super.key, required this.data});
   DocumentSnapshot data;
+
   @override
   Widget build(BuildContext context) {
+    print('image-===${data['Image']}');
     return Card(
       color: const Color.fromARGB(255, 240, 187, 30),
       elevation: 10,
@@ -19,12 +21,12 @@ class Listtile extends StatelessWidget {
           ListTile(
             leading: data['Image'] != null
                 ? CircleAvatar(
-                    radius: 34,
+                    radius: 50,
                     child: ClipOval(
                       child: CachedNetworkImage(
                         imageUrl: data['Image'],
-                        width: 56,
-                        height: 56,
+                        width: 50,
+                        height: 60,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => const Padding(
                           padding: EdgeInsets.all(5),
@@ -40,7 +42,7 @@ class Listtile extends StatelessWidget {
                     ),
                   )
                 : const CircleAvatar(
-                    radius: 32,
+                    radius: 50,
                     backgroundColor: Colors.black,
                     backgroundImage: AssetImage('assets/images/graduated.png'),
                   ),

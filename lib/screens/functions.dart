@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:student_app/screens/addstudent/add_student.dart';
 import 'package:student_app/screens/addstudent/addtile.dart';
+import 'package:student_app/screens/editstudent/editTile.dart';
 import 'package:student_app/screens/editstudent/edit_student.dart';
 import 'package:student_app/screens/liststudent/list_student.dart';
 
@@ -19,15 +20,18 @@ snackbar(text, context) {
 }
 
 Future<void> addstudent(BuildContext context) async {
-  if (formkey.currentState!.validate() && image1 != null) {
-    addfirebase();
-
-    await clearcontroller();
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).pop();
-
-    // ignore: use_build_context_synchronously
-    snackbar('Submitted', context);
+  if (formkey.currentState!.validate() && image != null) {
+    if (uploading == false) {
+      await addfirebase();
+      // ignore: use_build_context_synchronously
+      snackbar('Submitted', context);
+      // ignore: use_build_context_synchronously
+      await clearcontroller();
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
+    } else {
+      snackbar('Photo processing please wait', context);
+    }
   } else {
     snackbar('Please add photo', context);
   }
@@ -40,7 +44,7 @@ clearcontroller() {
   placecontroller.text = '';
 }
 
-addfirebase() {
+addfirebase() async {
   final data = {
     'Name': namecontroller.text,
     'Age': agecontroller.text,
@@ -48,19 +52,8 @@ addfirebase() {
     'Place': placecontroller.text,
     'Image': imageUrl,
   };
-  firedata.add(data);
-}
-
-updatefirebase(id, context) {
-  final data = {
-    'Name': namecontrollers.text,
-    'Age': agecontrollers.text,
-    'Phone Number': phonecontrollers.text,
-    'Place': placecontrollers.text,
-    'Image': imageUrl,
-  };
-  firedata.doc(id).update(data);
-  snackbar('Updated', context);
+  await firedata.add(data);
+  imageUrl = null;
 }
 
 deletefirebase(id) {

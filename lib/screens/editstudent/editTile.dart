@@ -1,30 +1,49 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:student_app/screens/addstudent/add_student.dart';
 import 'package:student_app/screens/addstudent/addtile.dart';
 import 'package:student_app/screens/editstudent/edit_student.dart';
 import 'package:student_app/screens/functions.dart';
 import 'package:student_app/screens/home_screen/homescreen.dart';
+import 'package:student_app/screens/liststudent/list_student.dart';
 
+bool uploadingedit = false;
+
+// ignore: must_be_immutable
 class EditTile extends StatefulWidget {
-  const EditTile({super.key, required this.studentdetails});
+  EditTile(
+      {super.key,
+      required this.studentdetails,
+      required this.agecontrollers,
+      required this.namecontrollers,
+      required this.phonecontrollers,
+      required this.placecontrollers});
   final studentdetails;
+  TextEditingController placecontrollers;
+  TextEditingController phonecontrollers;
+  TextEditingController agecontrollers;
+  TextEditingController namecontrollers;
+
   @override
   State<EditTile> createState() => _EditTileState();
 }
 
 class _EditTileState extends State<EditTile> {
   final GlobalKey<FormState> key2 = GlobalKey<FormState>();
+
   @override
   void initState() {
-    namecontrollers.text = widget.studentdetails['Name'];
-    agecontrollers.text = widget.studentdetails['Age'];
-    phonecontrollers.text = widget.studentdetails['Phone Number'];
-    placecontrollers.text = widget.studentdetails['Place'];
+    widget.namecontrollers.text = widget.studentdetails['Name'];
+
+    widget.agecontrollers.text = widget.studentdetails['Age'];
+
+    widget.phonecontrollers.text = widget.studentdetails['Phone Number'];
+
+    widget.placecontrollers.text = widget.studentdetails['Place'];
     super.initState();
   }
 
@@ -45,7 +64,7 @@ class _EditTileState extends State<EditTile> {
                 ),
                 Stack(
                   children: [
-                    image1 == null
+                    image == null
                         ? CircleAvatar(
                             radius: 40,
                             child: ClipOval(
@@ -69,16 +88,23 @@ class _EditTileState extends State<EditTile> {
                               ),
                             ),
                           )
-                        : CircleAvatar(
-                            radius: 40,
-                            backgroundImage: FileImage(image1!),
-                          ),
+                        : uploadingedit
+                            ? const CircleAvatar(
+                                radius: 40,
+                                backgroundColor: Colors.black,
+                                child: CircularProgressIndicator(
+                                    color: Color.fromARGB(255, 240, 187, 30),
+                                    backgroundColor: Colors.transparent),
+                              )
+                            : CircleAvatar(
+                                radius: 40,
+                                backgroundImage: MemoryImage(imagebyte!)),
                     Positioned(
                       bottom: -10,
                       left: 42,
                       child: IconButton(
                           onPressed: () {
-                            option();
+                            fromgallery();
                           },
                           icon: const Icon(
                             Icons.add_a_photo,
@@ -99,7 +125,7 @@ class _EditTileState extends State<EditTile> {
                           height: 80,
                           width: 300,
                           child: TextFormField(
-                            controller: namecontrollers,
+                            controller: widget.namecontrollers,
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(15)
                             ],
@@ -137,7 +163,7 @@ class _EditTileState extends State<EditTile> {
                             inputFormatters: [
                               LengthLimitingTextInputFormatter(2),
                             ],
-                            controller: agecontrollers,
+                            controller: widget.agecontrollers,
                             validator: (value) {
                               if (value!.isEmpty) {
                                 return 'Please enter age';
@@ -168,7 +194,7 @@ class _EditTileState extends State<EditTile> {
                               LengthLimitingTextInputFormatter(10),
                             ],
                             keyboardType: TextInputType.phone,
-                            controller: phonecontrollers,
+                            controller: widget.phonecontrollers,
                             validator: (value) {
                               if (value!.isEmpty) {
                                 return 'Please enter phone number';
@@ -195,7 +221,7 @@ class _EditTileState extends State<EditTile> {
                           height: 80,
                           width: 300,
                           child: TextFormField(
-                            controller: placecontrollers,
+                            controller: widget.placecontrollers,
                             validator: (value) {
                               if (value!.isEmpty) {
                                 return 'Please enter place';
@@ -221,16 +247,38 @@ class _EditTileState extends State<EditTile> {
                         SizedBox(
                           width: 300,
                           child: ElevatedButton(
-                              onPressed: () {
-                                updatefirebase(
-                                    widget.studentdetails.id, context);
-                                setState(() {
-                                  image1 = null;
-                                });
-                                Navigator.of(context)
-                                    .push(MaterialPageRoute(builder: (context) {
-                                  return const Homescreen();
-                                }));
+                              onPressed: () async {
+                                if (widget.studentdetails['Name'] ==
+                                        widget.namecontrollers.text &&
+                                    widget.studentdetails['Age'] ==
+                                        widget.agecontrollers.text &&
+                                    widget.studentdetails['Phone Number'] ==
+                                        widget.phonecontrollers.text &&
+                                    widget.studentdetails['Place'] ==
+                                        widget.placecontrollers.text &&
+                                    image == null) {
+                                  snackbar('No changes', context);
+                                } else {
+                                  if (key2.currentState!.validate() &&
+                                      widget.studentdetails['Image'] != null) {
+                                    if (uploadingedit == false) {
+                                      await updatefirebase(
+                                          widget.studentdetails.id,
+                                          context,
+                                          widget.studentdetails['Image']);
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(builder: (ctx) {
+                                        return const Homescreen();
+                                      }));
+                                      snackbar('Updated', context);
+                                    } else {
+                                      snackbar('Photo processing please wait',
+                                          context);
+                                    }
+                                  } else {
+                                    snackbar('Please add photo', context);
+                                  }
+                                }
                               },
                               style: ElevatedButton.styleFrom(
                                   backgroundColor:
@@ -252,83 +300,103 @@ class _EditTileState extends State<EditTile> {
     );
   }
 
-  option() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.amber.shade500,
-          content: const Text(
-            'Photo options',
-            style: TextStyle(color: Colors.black),
-          ),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  fromcamera();
-                },
-                child: const Text(
-                  'Camera',
-                  style: TextStyle(color: Colors.black),
-                )),
-            TextButton(
-              onPressed: () {
-                fromgallery();
-              },
-              child: const Text(
-                'Gallery',
-                style: TextStyle(color: Colors.black),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> fromgallery() async {
-    final img1 = await ImagePicker().pickImage(source: ImageSource.gallery);
+    FilePickerResult? img1 = await FilePicker.platform.pickFiles();
 
     if (img1 != null) {
       setState(() {
-        image1 = File(img1.path);
-        image = image1!.path;
+        image = img1.files.first.name;
+        imagebyte = img1.files.first.bytes;
       });
     }
+
     try {
-      String fileName = DateTime.now().microsecondsSinceEpoch.toString();
-      Reference referenceRoot = FirebaseStorage.instance.ref();
-      Reference referenceDireImage = referenceRoot.child('images');
-      Reference referenceImageToUpload = referenceDireImage.child(fileName);
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
-      await referenceImageToUpload.putFile(File(img1!.path));
-      imageUrl = await referenceImageToUpload.getDownloadURL();
-    } catch (e) {
-      print(e);
-    } finally {}
-  }
-
-  Future<void> fromcamera() async {
-    final img1 = await ImagePicker().pickImage(source: ImageSource.camera);
-
-    if (img1 != null) {
+      // Show the circular indicator while waiting for the imageUrl
       setState(() {
-        image1 = File(img1.path);
-        image = image1!.path;
+        uploadingedit = true;
       });
-    }
-    try {
-      String fileName = DateTime.now().microsecondsSinceEpoch.toString();
-      Reference referenceRoot = FirebaseStorage.instance.ref();
-      Reference referenceDireImage = referenceRoot.child('images');
-      Reference referenceImageToUpload = referenceDireImage.child(fileName);
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
-      await referenceImageToUpload.putFile(File(img1!.path));
-      imageUrl = await referenceImageToUpload.getDownloadURL();
+
+      firebase_storage.UploadTask uploadTask;
+      firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child('Product')
+          .child('/${image!}');
+      final metadata =
+          firebase_storage.SettableMetadata(contentType: 'image/jpeg');
+      uploadTask = ref.putData(imagebyte!, metadata);
+
+      await uploadTask.whenComplete(() => null);
+
+      imageUrl = await ref.getDownloadURL();
+      print(imageUrl);
+
+      setState(() {
+        uploadingedit = false;
+      });
     } catch (e) {
       print(e);
-    } finally {}
+      setState(() {
+        uploadingedit = false;
+      });
+    }
   }
+
+  updatestudents(id, context, nullimage) async {
+    if (widget.studentdetails['Name'] == widget.namecontrollers.text &&
+        widget.studentdetails['Age'] == widget.agecontrollers.text &&
+        widget.studentdetails['Phone Number'] == widget.phonecontrollers.text &&
+        widget.studentdetails['Place'] == widget.placecontrollers.text) {
+      snackbar('No changes', context);
+    } else {
+      if (key2.currentState!.validate() &&
+          widget.studentdetails['Image'] != null) {
+        if (uploadingedit == false) {
+          await updatefirebase(id, context, nullimage);
+          snackbar('Updated', context);
+        } else {
+          snackbar('Photo processing please wait', context);
+        }
+      } else {
+        snackbar('Please add photo', context);
+      }
+    }
+  }
+
+  updatefirebase(id, context, nullimage) {
+    final data = {
+      'Name': widget.namecontrollers.text,
+      'Age': widget.agecontrollers.text,
+      'Phone Number': widget.phonecontrollers.text,
+      'Place': widget.placecontrollers.text,
+      'Image': imageUrl ?? widget.studentdetails['Image'],
+    };
+    firedata.doc(id).update(data);
+    snackbar('Updated', context);
+  }
+  // Future<void> fromgallery() async {
+  //   FilePickerResult? img1 = await FilePicker.platform.pickFiles();
+
+  //   if (img1 != null) {
+  //     setState(() {
+  //       image = img1.files.first.name;
+  //       imagebyte = img1.files.first.bytes;
+  //     });
+  //   }
+
+  //   try {
+  //     firebase_storage.UploadTask uploadTask;
+  //     firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
+  //         .ref()
+  //         .child('Product')
+  //         .child('/${image!}');
+  //     final metadata =
+  //         firebase_storage.SettableMetadata(contentType: 'image/jpeg');
+  //     uploadTask = ref.putData(imagebyte!, metadata);
+  //     await uploadTask.whenComplete(() => null);
+  //     imageUrl = await ref.getDownloadURL();
+  //     print(imageUrl);
+  //   } catch (e) {
+  //     print(e);
+  //   }
+  // }
 }

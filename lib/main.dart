@@ -6,10 +6,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: const FirebaseOptions(
-          apiKey: 'AIzaSyC2Dy6MzLkMHV5F_--YEg4rf84-a1J-xQc',
-          appId: '1:840014197662:android:0f31acb34bc304e4889c8f',
-          messagingSenderId: '840014197662',
-          projectId: 'student-app-397ae'));
+          apiKey: "AIzaSyAeZM1j_0ChGNBGULAupo_ZDw7BRGWRF1Y",
+          authDomain: "student-app-397ae.firebaseapp.com",
+          projectId: "student-app-397ae",
+          storageBucket: "student-app-397ae.appspot.com",
+          messagingSenderId: "840014197662",
+          appId: "1:840014197662:web:573e7a5c0811b853889c8f",
+          measurementId: "G-8GHG25WX4J"));
 
   runApp(const MyApp());
 }
